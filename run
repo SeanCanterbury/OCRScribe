@@ -1,0 +1,6 @@
+# CHANGE DIRECTORY
+cd /Users/samjordan/Desktop/4155-Project/OCRScribe
+# INSTALL DEPEN
+npm i
+# RUN THE PROJECT
+npm run start
