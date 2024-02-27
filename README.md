@@ -12,6 +12,8 @@ git clone git@github.com:SeanCanterbury/OCRScribe.git
 cd OCRScribe
 # iinstall Depend
 npm i 
+# Rename app to App
+mv app App
 # run the project
 npm run start
 ```
