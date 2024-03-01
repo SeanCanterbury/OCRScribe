@@ -4,8 +4,8 @@
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "dependencies": {
@@ -15,8 +15,11 @@
     "expo-linking": "^6.2.2",
     "expo-router": "^3.4.7",
     "expo-status-bar": "~1.11.1",
+    "hermes": "^0.4.4",
+    "metro-cache": "^0.80.6",
     "react": "18.2.0",
-    "react-native": "0.73.4"
+    "react-native": "0.73.4",
+    "react-native-web": "~0.19.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
