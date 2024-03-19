@@ -1,29 +1,27 @@
-// app/Home.js
+// app/Scanning.js
 import React from 'react';
 import { View, Text, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-const Home = () => {
+const Scanning = () => {
   const navigation = useNavigation();
+
+  // Example function to demonstrate navigation
+  // Replace this with your actual function for scanning
+  const startScanning = () => {
+    console.log('Start scanning');
+  };
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Hello, World!</Text>
-      <Button
-        title="Access Files"
-        onPress={() => navigation.navigate('Files')}
-      />
+      <Text>Scanning Screen</Text>
       <Button
         title="Start Scanning"
-        onPress={() => navigation.navigate('Scanning')}
+        onPress={startScanning}
       />
     </View>
   );
 };
 
-export default Home;
-
-
-
-
+export default Scanning;
 
