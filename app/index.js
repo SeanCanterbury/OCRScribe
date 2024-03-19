@@ -1,18 +1,9 @@
-
-// app/Index.js
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
 import { View, Button, Text, StyleSheet, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Home from './Home';
-import Files from './Files';
-import Scanning from './Scanning';
-
-const Stack = createStackNavigator();
 
 const Index = () => {
-  const navigation = useNavigation(); // useNavigation is recognized here
+  const navigation = useNavigation();
 
   const handleEnterPress = () => {
     navigation.navigate('Home');
@@ -42,15 +33,4 @@ const styles = StyleSheet.create({
   },
 });
 
-const App = () => (
-  <NavigationContainer>
-    <Stack.Navigator>
-      <Stack.Screen name="Index" component={Index} />
-      <Stack.Screen name="Home" component={Home} />
-      <Stack.Screen name="Files" component={Files} />
-      <Stack.Screen name="Scanning" component={Scanning} />
-    </Stack.Navigator>
-  </NavigationContainer>
-);
-
-export default App;
+export default Index;
