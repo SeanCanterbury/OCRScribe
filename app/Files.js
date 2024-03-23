@@ -1,36 +1,51 @@
-// app/Files.js
-import React, { useState } from 'react';
-import { View, Text, Button, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Button, FlatList, TouchableOpacity, Platform, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 
 const Files = () => {
   const navigation = useNavigation();
-  const [files, setFiles] = useState([]); // State to store uploaded files
+  const [images, setImages] = useState([]);
 
-  // Function to handle file upload
-  const handleFileUpload = () => {
-    // Logic to upload file goes here
-    console.log('File uploaded');
-    // For demonstration, adding a dummy file to the list
-    setFiles([...files, { id: files.length + 1, name: `File ${files.length + 1}` }]);
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          alert('Sorry, we need camera roll permissions to make this work!');
+        }
+      }
+    })();
+  }, []);
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false, // Disable editing for simplicity
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setImages([...images, result.uri]);
+    }
   };
 
-  // Function to render each file item in the list
-  const renderFileItem = ({ item }) => (
-    <TouchableOpacity onPress={() => console.log(`File selected: ${item.name}`)}>
-      <Text>{item.name}</Text>
+  const renderImageItem = ({ item }) => (
+    <TouchableOpacity onPress={() => console.log(`Image selected: ${item}`)}>
+      <Image source={{ uri: item }} style={{ width: 100, height: 100 }} />
     </TouchableOpacity>
   );
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Upload Files</Text>
-      <Button title="Upload File" onPress={handleFileUpload} />
-      <Text>Uploaded Files:</Text>
+      <Text>Upload Images</Text>
+      <Button title="Upload Image" onPress={pickImage} />
+      <Text>Uploaded Images:</Text>
       <FlatList
-        data={files}
-        renderItem={renderFileItem}
-        keyExtractor={(item) => item.id.toString()}
+        data={images}
+        renderItem={renderImageItem}
+        keyExtractor={(item, index) => index.toString()}
       />
     </View>
   );
