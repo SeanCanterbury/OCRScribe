@@ -1,5 +1,5 @@
 #flask imports
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
@@ -54,6 +54,10 @@ def upload_file():
 def get_files():
     files = os.listdir(app.config['UPLOAD_FOLDER'])
     return jsonify({'files': files})
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/helloworld', methods=['GET'])
 def hello_world():
