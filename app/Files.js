@@ -3,9 +3,79 @@ import { View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, 
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 
+// Function to upload file
+const uploadFile = async (uri, type, name) => {
+  const url = 'http://127.0.0.1:5000/upload';
+
+  // Create a new form data
+  let formData = new FormData();
+
+  // Append the file to form data
+  let file = {
+    uri,
+    type,
+    name,
+  };
+
+  formData.append('file', file);
+
+  // Options for the fetch request
+  let options = {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  };
+
+  // Make the request
+  try {
+    let response = await fetch(url, options);
+    let responseJson = await response.json();
+    return responseJson;
+  } catch (error) {
+    console.error(error);
+  }
+
+  // Usage
+  //uploadFile('file://path/to/file.jpg', 'image/jpeg', 'file.jpg');
+};
+
+
+
 const Files = () => {
   const navigation = useNavigation();
   const [images, setImages] = useState([]);
+  
+  useEffect(() => {
+    fetch('http://YOUR-IP:5001/files')
+      .then(response => response.json())
+      .then(data => {console.log(data);
+      })
+      .catch(error => {
+        console.log(error);
+        console.error('Error fetching files:', error);
+      });
+  }, []);
+  
+  const getHello = async () => {
+    try {
+      console.log("Getting hello1");
+  
+      const response = await fetch('http://YOUR-IP:5001/helloworld');
+      console.log("Getting hello2");
+      const json = await response.json();
+      console.log(json.message);
+      
+    } catch (error) {
+      console.error(error);
+    } 
+  };
+  
+  useEffect(() => {
+    getHello();
+  }, []);
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(null); // Updated to use index
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -28,7 +98,9 @@ const Files = () => {
       });
 
       if (!result.cancelled && result.assets.length > 0 && result.assets[0].uri) {
-        setImages(prevImages => [...prevImages, result.assets[0].uri]);
+        //setImages(prevImages => [...prevImages, result.assets[0].uri]);
+        print(result.uri)
+        uploadFile(result.uri, 'image/jpeg', 'uploaded_image.jpg');
       } else {
         console.log('Image selection canceled or URI is undefined.');
       }

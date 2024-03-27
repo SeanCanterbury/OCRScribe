@@ -1,5 +1,6 @@
 #flask imports
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
 
@@ -12,30 +13,12 @@ import cv2
 import pytesseract
 
 app = Flask(__name__)
+CORS(app)
 
-image_path = 'uploads/1.jpg'
-
-# Load the model
 model = load_model('hand_machine_written.h5')
 
-# Read the image using OpenCV
-img = cv2.imread(image_path)
-
-# Check if the image was correctly loaded
-if img is None:
-    print(f"Image not found at {image_path}")
-else:
-    # Convert the image to gray scale
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # Use Tesseract to do OCR on the image
-    text = pytesseract.image_to_string(gray)
-
-    print(text)
-
-
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'heif', 'hevc'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def allowed_file(filename):
@@ -65,6 +48,18 @@ def upload_file():
       <input type=submit value=Upload>
     </form>
     """
+
+
+@app.route('/files', methods=['GET'])
+def get_files():
+    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    return jsonify({'files': files})
+
+@app.route('/helloworld', methods=['GET'])
+def hello_world():
+    return jsonify({'message': 'Hello, World!'})
+
+
 
 
 @app.route('/translate', methods=['GET'])
@@ -124,5 +119,5 @@ def translate_post():
     return jsonify({'text': text})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, ssl_context='adhoc')
 

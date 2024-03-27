@@ -25,3 +25,15 @@ there is currently no default endpoint so just visiting that url will give you a
 upload allows you to upload files from your device to the backend in the uploads folder api/uploads  
 
 translate lets you pick from the list of files in uploads and run the chosen file through the exsisting model.
+
+IMPORTANT ******* UPDATE
+    I have successfully accessed the api from the frontend in the Files.js file. just to print to console as proof of concept and this is what ive learned.
+
+    When running flask dev server you need to run it with the following command
+    flask run --host=0.0.0.0 --port=5001
+
+    this will allow the server to run on your devices ip address. This as far as i can tell is the only way to get this to work for testing purposes. For some reason because the react native runs our dev server on expo go it cannot access the api from the localhost address. because of this you will need to run it off of your devices ip address. 
+
+    since this is running on your computers ip address that means anyone with the ip can access it so its important to not leave the server running or your device could be exposed. (Not ideal but this is the only way i could get it to work)
+
+    For security reasons try to remember to manually remove your ip address from the frontend code and replace it with a placeholder that will throw an error (to remind whoever is working to swap it out with their own ip address) I have changed the ip address to YOUR-IP if you want to just ctrl + f and replace it in the Files.js
