@@ -37,3 +37,5 @@ IMPORTANT ******* UPDATE
     since this is running on your computers ip address that means anyone with the ip can access it so its important to not leave the server running or your device could be exposed. (Not ideal but this is the only way i could get it to work)
 
     For security reasons try to remember to manually remove your ip address from the frontend code and replace it with a placeholder that will throw an error (to remind whoever is working to swap it out with their own ip address) I have changed the ip address to YOUR-IP if you want to just ctrl + f and replace it in the Files.js
+
+

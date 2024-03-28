@@ -93,12 +93,13 @@ def translate():
 @app.route('/translate', methods=['POST'])
 def translate_post():
     # Get the selected file from the form data
-    selected_file = request.form.get('file')
-    if not selected_file:
-        return jsonify({'error': 'No file selected'}), 400
+    # Get the filename from the request data
+    filename = request.json.get('filename')
+    if not filename:
+        return jsonify({'error': 'No filename provided'}), 400
 
     # Construct the image path
-    image_path = os.path.join(app.config['UPLOAD_FOLDER'], selected_file)
+    image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
     # Load the image using OpenCV
     img = cv2.imread(image_path)
@@ -114,8 +115,11 @@ def translate_post():
     text = pytesseract.image_to_string(gray)
     print('Text', text)
 
-    #May change to new folder for output
-    output_file_path = os.path.splitext(image_path)[0] + ".txt"
+    # May change to new folder for output
+    translations_folder = os.path.join(os.path.dirname(app.config['UPLOAD_FOLDER']), 'translations')
+    if not os.path.exists(translations_folder):
+        os.makedirs(translations_folder)
+    output_file_path = os.path.join(translations_folder, os.path.splitext(filename)[0] + ".txt")
     with open(output_file_path, 'w') as file:
         file.write(text)
 

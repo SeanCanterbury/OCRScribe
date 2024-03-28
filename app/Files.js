@@ -4,6 +4,43 @@ import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import IP from '../assets/assets.js'
 
+const uploadFile = async (uri) => {
+  const url = 'http://' + IP + ':5001/upload'; // Replace with your server URL
+
+  // Get the file name and type from the URI
+  let uriParts = uri.split('.');
+  let fileType = uriParts[uriParts.length - 1];
+
+  // Create a new form data
+  let formData = new FormData();
+
+  // Append the file to form data
+  let file = {
+    uri,
+    name: `photo.${fileType}`,
+    type: `image/${fileType}`,
+  };
+
+  formData.append('file', file);
+
+  // Options for the fetch request
+  let options = {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  };
+
+  // Make the request
+  try {
+    let response = await fetch(url, options);
+    let responseJson = await response.json();
+    return responseJson;
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 const Files = () => {
   const navigation = useNavigation();
@@ -11,6 +48,7 @@ const Files = () => {
 
   //preloads images const with the existing files in the server.
   useEffect(() => {
+    console.log('http://' + IP + ':5001/files')
     fetch('http://' + IP + ':5001/files')
       .then(response => response.json())
       .then(data => {
@@ -43,27 +81,15 @@ const Files = () => {
   }, []);
   */
 
-  const translateImage = async (uri, type, name) => {
+  const translateImage = async (filename) => {
     const url = 'http://' + IP + ':5001/translate'; // Replace with your server URL
-  
-    // Create a new form data
-    let formData = new FormData();
-  
-    // Append the file to form data
-    let file = {
-      uri,
-      type,
-      name,
-    };
-  
-    formData.append('file', file);
   
     // Options for the fetch request
     let options = {
       method: 'POST',
-      body: formData,
+      body: JSON.stringify({ filename }),
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
       },
     };
   
@@ -99,11 +125,11 @@ const Files = () => {
         aspect: [4, 3],
         quality: 1,
       });
-
+      console.log("testing");
       if (!result.cancelled && result.assets.length > 0 && result.assets[0].uri) {
         //setImages(prevImages => [...prevImages, result.assets[0].uri]);
-        print(result.uri)
-        uploadFile(result.uri, 'image/jpeg', 'uploaded_image.jpg');
+        console.log(result.assets[0].uri);
+        uploadFile(result.assets[0].uri);
       } else {
         console.log('Image selection canceled or URI is undefined.');
       }
@@ -137,15 +163,22 @@ const Files = () => {
 
 
 //not working yet
-  const scanImage = async() => {
-    console.log(`Scanning image at index ${selectedImageIndex}`);
-    const selectedImageUrl = images[selectedImageIndex];
+const scanImage = async() => {
+  console.log(`Scanning image at index ${selectedImageIndex}`);
+  const selectedImageUrl = images[selectedImageIndex];
+  console.log(selectedImageUrl);
 
-    const response = await translateImage(selectedImageUrl, 'image/jpeg', 'file.jpg');
-  
-    console.log(response);
-    setModalVisible(false);
-  };
+  // Extract the filename from the URL
+  const url = new URL(selectedImageUrl);
+  const selectedImageFilename = url.pathname.split('/').pop();
+
+  console.log(selectedImageFilename);
+
+  const response = await translateImage(selectedImageFilename);
+
+  console.log(response.text);
+  setModalVisible(false);
+};
 
   return (
     <View style={styles.container}>
