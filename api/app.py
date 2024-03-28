@@ -11,6 +11,7 @@ import keras
 from keras.models import load_model
 import cv2
 import pytesseract
+from model import run_ocr
 
 app = Flask(__name__)
 CORS(app)
@@ -93,27 +94,22 @@ def translate():
 @app.route('/translate', methods=['POST'])
 def translate_post():
     # Get the selected file from the form data
-    # Get the filename from the request data
-    filename = request.json.get('filename')
+    filename = request.form.get('file')
     if not filename:
         return jsonify({'error': 'No filename provided'}), 400
 
     # Construct the image path
     image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-    # Load the image using OpenCV
-    img = cv2.imread(image_path)
-
-    # Check if the image was correctly loaded
-    if img is None:
+    # Check if the image exists
+    if not os.path.exists(image_path):
         return jsonify({'error': f"Image not found at {image_path}"}), 404
 
-    # Convert the image to gray scale
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # Use Tesseract to do OCR on the image
-    text = pytesseract.image_to_string(gray)
-    print('Text', text)
+    # Run OCR on the image
+    try:
+        text = run_ocr(image_path)
+    except Exception as e:
+        return jsonify({'error': f"Error running OCR: {str(e)}"}), 500
 
     # May change to new folder for output
     translations_folder = os.path.join(os.path.dirname(app.config['UPLOAD_FOLDER']), 'translations')

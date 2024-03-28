@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, 
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import IP from '../assets/assets.js'
+import model from model.py
 
 const uploadFile = async (uri) => {
   const url = 'http://' + IP + ':5001/upload'; // Replace with your server URL
