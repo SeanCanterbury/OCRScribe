@@ -80,7 +80,16 @@ def upload_file():
         if file and allowed_file(file.filename):
             #saving file to uploads folder
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            if os.path.exists(file_path):
+                # Generate a new filename by appending a number to the original filename
+                count = 1
+                while os.path.exists(file_path):
+                    new_filename = f"{os.path.splitext(filename)[0]}_{count}{os.path.splitext(filename)[1]}"
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+                    count += 1
+                filename = new_filename
+            file.save(file_path)
 
             #saving metadata to database\
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
