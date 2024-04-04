@@ -45,9 +45,20 @@ go to this link https://postgresapp.com/ download postgresapp
 once running run this in terminal sudo mkdir -p /etc/paths.d &&
 echo /Applications/Postgres.app/Contents/Versions/latest/bin | sudo tee /etc/paths.d/postgresapp
 
+to create the database on your machine run 'psql' to enter the psql terminal and then run 'CREATE DATABASE ocrscribe_db' to create the database
+
 restart terminal and you should be able to use the psql command to connect to your database for me i run 'psql postgres://seancanterbury@localhost:5432/ocrscribe_db'
 
 
 breakdown of this url postgres://seancanterbury@localhost:5432/ocrscribe_db
 
 postgres://username:password@localhost:5432/dbname
+
+to initialize the database you will first need to create the database using the commands above then while running the backend go to localhost:5000/dbInit to initialize the database with the models in the models.py
+
+to reset the database call localhost:5000/dbReset 
+this will erase all entries in the database and create a blank db with our skeleton only including an admin user for testing purposes
+
+if you would like to download pgadmin you can use this to see the db in a GUI to verify entries for testing
+
+

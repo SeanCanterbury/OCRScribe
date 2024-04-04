@@ -1,12 +1,12 @@
 #interpreter/OCRScribe/api/venv/bin/python3
 
+
 #flask imports
 from flask import Flask, request, jsonify, send_from_directory
-#from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
 from flask_sqlalchemy import SQLAlchemy
-
+from flask_migrate import Migrate
 #OCR stuff
 import pandas as pd
 import tensorflow as tf
@@ -16,52 +16,59 @@ import cv2
 import pytesseract
 from model import run_ocr
 
+
 app = Flask(__name__)
-#CORS(app)
+
+
+# Retrieve environment variables for database connection and secret key
+username = 'seancanterbury'     #os.getenv("DB_USERNAME")
+password = ''                   #os.getenv("DB_PASSWORD")
+host = 'localhost'              #os.getenv("DB_HOST")
+port = '5432'                   #os.getenv("DB_PORT")
+dbname = 'ocrscribe_db'         #os.getenv("DB_NAME")
+
+# Create a connection string for the PostgreSQL database
+# with password connection_string = f"postgresql://{username}:{password}@{host}:{port}/{dbname}"
+connection_string = f"postgresql://{username}@{host}:{port}/{dbname}"
 
 #connecting to postgresql database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://seancanterbury@localhost/ocrscribe_db'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://seancanterbury@localhost/ocrscribe_db'
+app.config["SQLALCHEMY_DATABASE_URI"] = connection_string
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
-model = load_model('hand_machine_written.h5')
+from models import User, Upload
+
+
+#model = load_model('hand_machine_written.h5')
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'heif', 'hevc'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['TRANSLATIONS_FOLDER'] = 'translations'
 
-#model for user
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(80), nullable=False)
+global current_user
+current_user = None
 
-    def __repr__(self):
-        return '<User %r>' % self.username
-    
-#creating the tables in the database
-def create_tables():
-    db.create_all()
     
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-#testing database connection
+@app.route('/dbInit', methods=['GET'])
+def db_init():
+    db.create_all()
+    return jsonify({'message': 'Database initialized'}), 200
+
+#testing database connection by creating a new upload entry and pushing it to db
 @app.route('/', methods=['GET'])
 def get_users():
-    #create_tables() initializes the tables of the database if they do not exist need to move this to only run once
-    #create_tables()
-    #creating a new user
-    #new_user = User(username='sean', email='swcanterbury7@gmail.com')
-    #adding the new user to the database
-    #db.session.add(new_user)
-    #commiting the changes to the database
-    #db.session.commit()
-    #querying the database for all users
-    users = User.query.all()
-    #returning the usernames of all the users
-    return jsonify([user.username for user in users])
+    new_upload = Upload(user_id=1, file_name='test.jpg', file_path='uploads/test.jpg')
+    db.session.add(new_upload)
+    db.session.commit()
+    uploads = Upload.query.all()
+    return jsonify([uploads.file_name for uploads in uploads])
 
+#todo add user_id to the upload model
 @app.route('/upload', methods=['POST', 'GET'])
 def upload_file():
     if request.method == 'POST':
@@ -71,8 +78,16 @@ def upload_file():
         if file.filename == '':
             return jsonify({'error': 'No selected file'}), 400
         if file and allowed_file(file.filename):
+            #saving file to uploads folder
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+            #saving metadata to database\
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            new_upload = Upload(user_id=1, file_name=filename, file_path=filepath)
+            db.session.add(new_upload)
+            db.session.commit()
+
             return jsonify({'message': 'File uploaded successfully'}), 200
         else:
             return jsonify({'error': 'Invalid file type.'}), 400
@@ -87,7 +102,84 @@ def upload_file():
     </form>
     """
 
+#remove GET access before production
+@app.route('/delete/<filename>', methods=['GET','DELETE'])
+def delete_file(filename):
+    # Delete the file from the uploads folder
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    else:
+        return jsonify({'error': f"File not found at {file_path}"}), 404
+    
+    # Delete the corresponding translation file from the translations folder
+    translation_file_path = os.path.join(app.config['TRANSLATIONS_FOLDER'], os.path.splitext(filename)[0] + ".txt")
+    if os.path.exists(translation_file_path):
+        os.remove(translation_file_path)
+    
+    # Delete the database entry
+    upload = Upload.query.filter_by(file_name=filename).first()
+    if upload:
+        db.session.delete(upload)
+        db.session.commit()
+    
+    return jsonify({'message': 'File deleted successfully'}), 200
 
+
+#user endpoints
+
+#create user through signup
+@app.route('/signup', methods=['POST'])
+def signup():
+    if not request.json:
+        return jsonify({'error': 'No input data provided'}), 400
+    if 'username' in User.query.filter_by(username=request.json['username']).first() or 'email' in User.query.filter_by(email=request.json['email']).first():
+        return jsonify({'error': 'Username already exists'}), 400
+    else:
+        new_user = User(username=request.json['username'], email=request.json['email'], password=request.json['password'])
+        db.session.add(new_user)
+        db.session.commit()
+        global current_user 
+        current_user = new_user
+        return jsonify({'message': 'User created successfully'}), 201
+    
+
+@app.route('/login', methods=['POST'])
+def login():
+    if not request.json:
+        return jsonify({'error': 'No input data provided'}), 400
+    user = User.query.filter_by(username=request.json['username']).first()
+    if not user or user.password != request.json['password']:
+        return jsonify({'error': 'Invalid username or password'}), 400
+    global current_user
+    current_user = user
+    return jsonify({'message': 'Login successful'}), 200
+
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    global current_user
+    current_user = None
+    return jsonify({'message': 'Logout successful'}), 200
+
+#FOR DEV ONLY - DELETE BEFORE PRODUCTION
+@app.route('/dbReset', methods=['GET'])
+def db_reset():
+    db.drop_all()
+    db.create_all()
+    admin = User(username='admin',password='admin',email='admin_email')
+    db.session.add(admin)
+    db.session.commit()
+    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    for file in files:
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], file))
+
+    trans = os.listdir(app.config['TRANSLATIONS_FOLDER'])
+    for tran in trans:
+        os.remove(os.path.join(app.config['TRANSLATIONS_FOLDER'], tran))
+    return jsonify({'message': 'Database reset successfully'}), 200
+
+#Will need to change so that it only returns files of the logged in user
 @app.route('/files', methods=['GET'])
 def get_files():
     files = os.listdir(app.config['UPLOAD_FOLDER'])
@@ -97,13 +189,7 @@ def get_files():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-@app.route('/helloworld', methods=['GET'])
-def hello_world():
-    return jsonify({'message': 'Hello, World!'})
-
-
-
-
+#testing only
 @app.route('/translate', methods=['GET'])
 def translate():
     # prompt user to select file to translate from upload folder
@@ -128,6 +214,7 @@ def translate():
     """
     return html
 
+
 @app.route('/translate', methods=['POST'])
 def translate_post():
     # Get the selected file from the form data
@@ -136,7 +223,11 @@ def translate_post():
         return jsonify({'error': 'No filename provided'}), 400
 
     # Construct the image path
-    image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    # Get the image path from the database
+    upload = Upload.query.filter_by(file_name=filename).first()
+    if not upload:
+        return jsonify({'error': f"Image not found in the database"}), 404
+    image_path = upload.file_path
 
     # Check if the image exists
     if not os.path.exists(image_path):
@@ -155,6 +246,9 @@ def translate_post():
     output_file_path = os.path.join(translations_folder, os.path.splitext(filename)[0] + ".txt")
     with open(output_file_path, 'w') as file:
         file.write(text)
+        upload.text_extracted = output_file_path
+        db.session.commit()
+        
 
     # Return the text as a JSON response
     return jsonify({'text': text})
@@ -162,6 +256,6 @@ def translate_post():
 if __name__ == '__main__':
     app.run(debug=True, ssl_context='adhoc')
     with app.app_context():
-        create_tables()
+        db.create_all()
     app.run(debug=True)
 
