@@ -13,6 +13,7 @@
     "@react-navigation/native": "^6.1.16",
     "@react-navigation/stack": "^6.3.28",
     "expo": "~50.0.7",
+    "expo-camera": "^14.1.1",
     "expo-constants": "~15.4.5",
     "expo-font": "~11.10.3",
     "expo-image-picker": "^14.7.1",
