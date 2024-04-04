@@ -1,8 +1,11 @@
+#interpreter/OCRScribe/api/venv/bin/python3
+
 #flask imports
 from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
+#from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
+from flask_sqlalchemy import SQLAlchemy
 
 #OCR stuff
 import pandas as pd
@@ -14,7 +17,11 @@ import pytesseract
 from model import run_ocr
 
 app = Flask(__name__)
-CORS(app)
+#CORS(app)
+
+#connecting to postgresql database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://seancanterbury@localhost/ocrscribe_db'
+db = SQLAlchemy(app)
 
 model = load_model('hand_machine_written.h5')
 
@@ -22,8 +29,38 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'heif', 'hevc'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+#model for user
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(80), nullable=False)
+
+    def __repr__(self):
+        return '<User %r>' % self.username
+    
+#creating the tables in the database
+def create_tables():
+    db.create_all()
+    
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+#testing database connection
+@app.route('/', methods=['GET'])
+def get_users():
+    #create_tables() initializes the tables of the database if they do not exist need to move this to only run once
+    #create_tables()
+    #creating a new user
+    #new_user = User(username='sean', email='swcanterbury7@gmail.com')
+    #adding the new user to the database
+    #db.session.add(new_user)
+    #commiting the changes to the database
+    #db.session.commit()
+    #querying the database for all users
+    users = User.query.all()
+    #returning the usernames of all the users
+    return jsonify([user.username for user in users])
 
 @app.route('/upload', methods=['POST', 'GET'])
 def upload_file():
@@ -124,4 +161,7 @@ def translate_post():
 
 if __name__ == '__main__':
     app.run(debug=True, ssl_context='adhoc')
+    with app.app_context():
+        create_tables()
+    app.run(debug=True)
 

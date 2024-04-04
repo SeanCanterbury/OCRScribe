@@ -1,13 +1,15 @@
 import os
 import shutil
 from glob import glob
-from tqdm import tqdm
+#from tqdm import tqdm
 import math
 import numpy as np
 import cv2
 from PIL import Image
-import matplotlib.pyplot as plt
-import splitfolders
+#import matplotlib.pyplot as plt
+#import splitfolders
+import sys
+print(sys.executable)
 from natsort import natsorted
 #YOLO
 from ultralytics import YOLO
@@ -159,7 +161,7 @@ def run_split(image_name):
         #print('ocr_job/'+str(idx)+'.jpg')
         save_path = f'ocr_job/{idx}.jpg'
         cv2.imwrite(save_path, i)
-
+"""
 #split train : validate data
 import locale
 def getpreferredencoding(do_setlocale = True):
@@ -168,7 +170,7 @@ locale.getpreferredencoding = getpreferredencoding
 #!rm -rf /content/yolo_split
 splitfolders.ratio("./yolo", output="./yolo_split",
     seed=0, ratio=(.9, .1), group_prefix=None, move=False) # default values
-
+"""
 
 def run_ocr(image_name):
     run_split(image_name)

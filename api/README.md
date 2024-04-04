@@ -39,3 +39,15 @@ IMPORTANT ******* UPDATE
     For security reasons try to remember to manually remove your ip address from the frontend code and replace it with a placeholder that will throw an error (to remind whoever is working to swap it out with their own ip address) I have changed the ip address to YOUR-IP if you want to just ctrl + f and replace it in the Files.js
 
 
+DATABASE INFORMATION
+go to this link https://postgresapp.com/ download postgresapp
+
+once running run this in terminal sudo mkdir -p /etc/paths.d &&
+echo /Applications/Postgres.app/Contents/Versions/latest/bin | sudo tee /etc/paths.d/postgresapp
+
+restart terminal and you should be able to use the psql command to connect to your database for me i run 'psql postgres://seancanterbury@localhost:5432/ocrscribe_db'
+
+
+breakdown of this url postgres://seancanterbury@localhost:5432/ocrscribe_db
+
+postgres://username:password@localhost:5432/dbname
