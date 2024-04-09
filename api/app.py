@@ -1,72 +1,45 @@
 #interpreter/OCRScribe/api/venv/bin/python3
 
-
 #flask imports
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-#OCR stuff
-import pandas as pd
-import tensorflow as tf
-import keras
-from keras.models import load_model
-import cv2
-import pytesseract
-from model import run_ocr
+from utils import auth_required, allowed_file
+import config
 
+#OCR stuff
+#import pandas as pd
+#import tensorflow as tf
+#import keras
+#from keras.models import load_model
+#import cv2
+#import pytesseract
+from model import run_ocr
 
 app = Flask(__name__)
 
+app.config["SQLALCHEMY_DATABASE_URI"] = config.connection_string
+app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
+app.config['TRANSLATIONS_FOLDER'] = config.TRANSLATIONS_FOLDER
 
-# Retrieve environment variables for database connection and secret key
-username = 'seancanterbury'     #os.getenv("DB_USERNAME")
-password = ''                   #os.getenv("DB_PASSWORD")
-host = 'localhost'              #os.getenv("DB_HOST")
-port = '5432'                   #os.getenv("DB_PORT")
-dbname = 'ocrscribe_db'         #os.getenv("DB_NAME")
-
-# Create a connection string for the PostgreSQL database
-# with password connection_string = f"postgresql://{username}:{password}@{host}:{port}/{dbname}"
-connection_string = f"postgresql://{username}@{host}:{port}/{dbname}"
-
-#connecting to postgresql database
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://seancanterbury@localhost/ocrscribe_db'
-app.config["SQLALCHEMY_DATABASE_URI"] = connection_string
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 from models import User, Upload
 
-
-#model = load_model('hand_machine_written.h5')
-
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'heif', 'hevc'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['TRANSLATIONS_FOLDER'] = 'translations'
-
-global current_user
-current_user = None
-
     
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+#testing database connection by creating a new upload entry and pushing it to db
+@app.route('/', methods=['GET'])
+@auth_required
+def index():
+    return jsonify({'message': 'Welcome to the OCRScribe API'}), 200
 
 @app.route('/dbInit', methods=['GET'])
 def db_init():
     db.create_all()
     return jsonify({'message': 'Database initialized'}), 200
-
-#testing database connection by creating a new upload entry and pushing it to db
-@app.route('/', methods=['GET'])
-def get_users():
-    new_upload = Upload(user_id=1, file_name='test.jpg', file_path='uploads/test.jpg')
-    db.session.add(new_upload)
-    db.session.commit()
-    uploads = Upload.query.all()
-    return jsonify([uploads.file_name for uploads in uploads])
 
 #todo add user_id to the upload model
 @app.route('/upload', methods=['POST', 'GET'])
@@ -246,6 +219,8 @@ def translate_post():
     try:
         text = run_ocr(image_path)
     except Exception as e:
+        os.system('rm -rf predict_detect/predict*')
+        os.system('rm -rf ocr_job')
         return jsonify({'error': f"Error running OCR: {str(e)}"}), 500
 
     # May change to new folder for output
