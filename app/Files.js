@@ -85,7 +85,7 @@ const Files = () => {
 
   const translateImage = async (filename) => {
     const url = 'http://' + IP + ':5001/translate'; // Replace with your server URL
-  
+    console.log("name: " + filename)
     // Options for the fetch request
     let options = {
       method: 'POST',

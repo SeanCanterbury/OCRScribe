@@ -319,7 +319,9 @@ def translate():
 @app.route('/translate', methods=['POST'])
 def translate_post():
     # Get the selected file from the form data
-    filename = request.form.get('file')
+    data = request.get_json()
+    filename = data.get('filename')
+    print(data)
     if not filename:
         return jsonify({'error': 'No filename provided'}), 400
 
