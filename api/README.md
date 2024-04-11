@@ -3,8 +3,10 @@ To activate the flask backend dev server from cloning the repo you first need to
 1: cd api
 
 2: python3 -m venv venv
+    windows: python3 -m venv venv
 
 3: source venv/bin/activate
+    windows: venv\Scripts\activate
 
 4: pip install -r requirements.txt
 (For installing requirements you may need to change your python interpreter in vs code by  shift + command + P, typing select python interpreter and choosing the right one for the project ONLY DO THIS IF YOU RUN INTO ISSUES WITH PIP INSTALL -R REQUIREMENTS.TXT)
