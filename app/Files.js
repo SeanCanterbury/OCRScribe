@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, 
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import IP from '../assets/assets.js'
-import uploadFile from '../assets/connectors.js';
-/*
+//import uploadFile from '../assets/connectors.js';
+
 const uploadFile = async (uri) => {
   const url = 'http://' + IP + ':5001/upload'; // Replace with your server URL
 
@@ -42,7 +42,7 @@ const uploadFile = async (uri) => {
     console.error(error);
   }
 };
-*/
+
 
 const Files = () => {
   const navigation = useNavigation();

@@ -1,4 +1,4 @@
-import IP from './assets/assets.js';
+import IP from 'assets.js';
 
 const uploadFile = async (uri) => {
     const url = 'http://' + IP + ':5001/upload'; // Replace with your server URL

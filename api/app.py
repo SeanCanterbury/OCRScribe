@@ -7,6 +7,7 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from utils import auth_required, allowed_file
+from flask_login import LoginManager, login_user, current_user
 import config
 
 #OCR stuff
@@ -23,18 +24,29 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = config.connection_string
 app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
 app.config['TRANSLATIONS_FOLDER'] = config.TRANSLATIONS_FOLDER
+app.config['SECRET_KEY'] = config.SECRET_KEY
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 from models import User, Upload
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def loader_user(user_id):
+    return User.query.get(user_id)
+
     
 #testing database connection by creating a new upload entry and pushing it to db
 @app.route('/', methods=['GET'])
-@auth_required
 def index():
-    return jsonify({'message': 'Welcome to the OCRScribe API'}), 200
+    if current_user.is_authenticated:
+        return f'Hello, {current_user.username}'
+    else:
+        return 'welcome to the api'
+    
 
 @app.route('/dbInit', methods=['GET'])
 def db_init():
@@ -66,7 +78,7 @@ def upload_file():
 
             #saving metadata to database\
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            new_upload = Upload(user_id=1, file_name=filename, file_path=filepath)
+            new_upload = Upload(user_id=current_user.id, file_name=filename, file_path=filepath)
             db.session.add(new_upload)
             db.session.commit()
 
@@ -110,39 +122,101 @@ def delete_file(filename):
 
 #user endpoints
 
-#create user through signup
-@app.route('/signup', methods=['POST'])
+#get for testing purposes only
+@app.route('/signup', methods=['POST', 'GET'])
 def signup():
-    if not request.json:
-        return jsonify({'error': 'No input data provided'}), 400
-    if 'username' in User.query.filter_by(username=request.json['username']).first() or 'email' in User.query.filter_by(email=request.json['email']).first():
-        return jsonify({'error': 'Username already exists'}), 400
-    else:
-        new_user = User(username=request.json['username'], email=request.json['email'], password=request.json['password'])
-        db.session.add(new_user)
+    if request.method == "POST":
+        user = User(username=request.form.get("username"),
+                     password=request.form.get("password"), 
+                     email=request.form.get("email"))
+        # Add the user to the database
+        db.session.add(user)
+        # Commit the changes made
         db.session.commit()
-        global current_user 
-        current_user = new_user
+        # Once user account created, redirect them
+        # to login route (created later on)
         return jsonify({'message': 'User created successfully'}), 201
-    
+    return """
+    <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up</title>
+    <style>
+      h1 {
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Create an account</h1>
+    <form action="#" method="post">
+      <label for="username">Username:</label>
+      <input type="text" name="username" />
+      <label for="password">Password:</label>
+      <input type="password" name="password" />
+      <label for="email">Email:</label>
+      <input type="email" name="email" />
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>
+    """
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST', 'GET'])
 def login():
-    if not request.json:
-        return jsonify({'error': 'No input data provided'}), 400
-    user = User.query.filter_by(username=request.json['username']).first()
-    if not user or user.password != request.json['password']:
-        return jsonify({'error': 'Invalid username or password'}), 400
-    global current_user
-    current_user = user
-    return jsonify({'message': 'Login successful'}), 200
+    if request.method == "POST":
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+        print(username)
+        print(password)
+        
+        user = User.query.filter_by(username=username).first()
+
+        if user.password == password:
+            login_user(user)
+            return jsonify({'message': 'Login successful'}), 200
+        else:
+            return jsonify({'error': 'Invalid password'}), 401
+    else:
+        return """
+        
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <style>
+        h1{
+          color: green;
+          }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <ul>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Create account</a></li>
+      </ul>
+    </nav>
+    <h1>Login to your account</h1>
+    <form action="#" method="post">
+      <label for="username">Username:</label>
+      <input type="text" name="username" />
+      <label for="password">Password:</label>
+      <input type="password" name="password" />
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>
+"""
 
 
-@app.route('/logout', methods=['GET'])
-def logout():
-    global current_user
-    current_user = None
-    return jsonify({'message': 'Logout successful'}), 200
 
 #FOR DEV ONLY - DELETE BEFORE PRODUCTION
 @app.route('/dbReset', methods=['GET'])
@@ -164,8 +238,11 @@ def db_reset():
 #Will need to change so that it only returns files of the logged in user
 @app.route('/files', methods=['GET'])
 def get_files():
-    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    uploads = Upload.query.filter_by(user_id=current_user.id).all()
+    files = [upload.file_name for upload in uploads]
     return jsonify({'files': files})
+
+        
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
