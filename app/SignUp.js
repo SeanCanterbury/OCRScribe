@@ -2,32 +2,25 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-const Index = () => {
+const SignUp = () => {
   const navigation = useNavigation();
 
-  const handleEnterPress = () => {
-    navigation.navigate('Home');
-  };
-
   const handleSignUpPress = () => {
-    navigation.navigate('SignUp');
+    // Perform sign-up logic here
+    // For now, just navigate back to the login page
+    navigation.goBack();
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>OCRScribe</Text>
-      <Text style={styles.subHeader}>Scan handwritten documents into machine-readable text</Text>
-      <StatusBar style="auto" />
-      <TextInput style={styles.input} placeholder="Username" />
+      <Text style={styles.header}>Sign Up</Text>
+      <TextInput style={styles.input} placeholder="First Name" />
+      <TextInput style={styles.input} placeholder="Last Name" />
+      <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" />
       <TextInput style={styles.input} placeholder="Password" secureTextEntry={true} />
-      <TouchableOpacity style={styles.loginButton} onPress={handleEnterPress}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
+      <TextInput style={styles.input} placeholder="Confirm Password" secureTextEntry={true} />
       <TouchableOpacity style={styles.signUpButton} onPress={handleSignUpPress}>
         <Text style={styles.buttonText}>Sign Up</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.skipButton} onPress={handleEnterPress}>
-        <Text style={styles.buttonText}>Skip Login</Text>
       </TouchableOpacity>
     </View>
   );
@@ -43,11 +36,6 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 36,
     fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  subHeader: {
-    fontSize: 18,
-    textAlign: 'center',
     marginBottom: 20,
   },
   input: {
@@ -59,22 +47,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 10,
   },
-  loginButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
   signUpButton: {
     backgroundColor: '#28a745',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  skipButton: {
-    backgroundColor: '#ccc',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 5,
@@ -87,4 +61,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Index;
+export default SignUp;

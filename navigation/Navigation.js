@@ -4,6 +4,7 @@ import Index from '../app/Index';
 import Home from '../app/Home';
 import Files from '../app/Files';
 import Scanning from '../app/Scanning';
+import SignUp from '../app/SignUp'; // Import the SignUp component
 import { TouchableOpacity, Text } from 'react-native';
 
 const Stack = createStackNavigator();
@@ -23,7 +24,7 @@ const Navigation = () => {
         headerRight: () => (
           <TouchableOpacity
             style={{ marginRight: 10 }}
-              onPress={() => alert('Sign Out button pressed')} // Replace with signout functionality
+              onPress={() => navigation.navigate('Index')} // Replace with signout functionality
           >
             <Text>Sign Out</Text>
           </TouchableOpacity>
@@ -38,6 +39,10 @@ const Navigation = () => {
         name="Scanning" 
         component={Scanning} 
         options={{ title: 'Scanning' }} />
+      <Stack.Screen 
+        name="SignUp" // Add a screen for SignUp
+        component={SignUp}
+        options={{ title: 'Sign Up' }} />
     </Stack.Navigator>
   );
 };
