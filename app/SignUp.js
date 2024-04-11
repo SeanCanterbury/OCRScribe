@@ -1,25 +1,65 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import IP from '../assets/assets.js';
 
 const SignUp = () => {
   const navigation = useNavigation();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [password2, setPassword2] = useState('');
 
-  const handleSignUpPress = () => {
-    // Perform sign-up logic here
-    // For now, just navigate back to the login page
-    navigation.goBack();
+  const handleSignUpPress = async () => {
+    try {
+      if (password !== password2) {
+        console.error('Passwords do not match');
+        return;
+      }
+      const response = await fetch('http://' + IP + ':5001/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password, email }),
+    })
+
+      console.log('Response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Response data:', data);
+        navigation.navigate('Home');
+      } else {
+        // Handle error response from server
+        console.error('Login failed');
+      }
+    } catch (error) {
+      // Handle network error
+      console.error('Network error:', error);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Sign Up</Text>
-      <TextInput style={styles.input} placeholder="First Name" />
-      <TextInput style={styles.input} placeholder="Last Name" />
-      <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" />
-      <TextInput style={styles.input} placeholder="Password" secureTextEntry={true} />
-      <TextInput style={styles.input} placeholder="Confirm Password" secureTextEntry={true} />
-      <TouchableOpacity style={styles.signUpButton} onPress={handleSignUpPress}>
+      <TextInput style={styles.input} 
+      onChangeText={setUsername}
+      value={username}
+      placeholder="Username" />
+      <TextInput style={styles.input} 
+      onChangeText={setEmail}
+      value={email}
+      placeholder="Email" />      
+      <TextInput style={styles.input} 
+      onChangeText={setPassword}
+      value={password}
+      placeholder="Password" />          
+      <TextInput style={styles.input} 
+      onChangeText={setPassword2}
+      value={password2}
+      placeholder="ConfirmPassword" />    
+            <TouchableOpacity style={styles.signUpButton} onPress={handleSignUpPress}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
     </View>

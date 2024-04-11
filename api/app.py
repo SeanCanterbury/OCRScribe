@@ -7,7 +7,7 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from utils import auth_required, allowed_file
-from flask_login import LoginManager, login_user, current_user
+from flask_login import LoginManager, login_user, current_user, logout_user
 import config
 
 #OCR stuff
@@ -126,15 +126,14 @@ def delete_file(filename):
 @app.route('/signup', methods=['POST', 'GET'])
 def signup():
     if request.method == "POST":
-        user = User(username=request.form.get("username"),
-                     password=request.form.get("password"), 
-                     email=request.form.get("email"))
-        # Add the user to the database
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+        email = data.get("email")
+        user = User(username=username, password=password, email=email)
         db.session.add(user)
-        # Commit the changes made
         db.session.commit()
-        # Once user account created, redirect them
-        # to login route (created later on)
+        login_user(user)
         return jsonify({'message': 'User created successfully'}), 201
     return """
     <!DOCTYPE html>
@@ -181,41 +180,84 @@ def login():
             return jsonify({'message': 'Login successful'}), 200
         else:
             return jsonify({'error': 'Invalid password'}), 401
-    else:
+    else:  # GET method
         return """
-        
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
-    <style>
-        h1{
-          color: green;
-          }
-    </style>
-  </head>
-  <body>
-    <nav>
-      <ul>
-        <li><a href="/login">Login</a></li>
-        <li><a href="/register">Create account</a></li>
-      </ul>
-    </nav>
-    <h1>Login to your account</h1>
-    <form action="#" method="post">
-      <label for="username">Username:</label>
-      <input type="text" name="username" />
-      <label for="password">Password:</label>
-      <input type="password" name="password" />
-      <button type="submit">Submit</button>
-    </form>
-  </body>
-</html>
-"""
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <style>
+      h1{
+        color: green;
+      }
+  </style>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="/login">Login</a></li>
+      <li><a href="/register">Create account</a></li>
+    </ul>
+  </nav>
+  <h1>Login to your account</h1>
+  <form id="loginForm" method="post">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" />
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" />
+    <button type="button" onclick="submitForm()">Submit</button>
+  </form>
 
+  <script>
+    function submitForm() {
+      var username = document.getElementById("username").value;
+      var password = document.getElementById("password").value;
+
+      var data = {
+        username: username,
+        password: password
+      };
+
+      fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Invalid username or password');
+        }
+        return response.json();
+      })
+      .then(data => {
+        alert(data.message);
+        // Handle successful login, redirect or other actions
+      })
+      .catch(error => {
+        alert(error.message);
+        // Handle error, display error message or other actions
+      });
+    }
+  </script>
+</body>
+</html>
+        """
+    
+@app.route('/signout', methods=['GET'])
+def signout():
+    logout_user()
+    return jsonify({'message': 'Sign out successful'}), 200
+
+@app.route('/user', methods=['GET'])
+def get_user():
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'User not authenticated'}), 401
+    return jsonify({'username': current_user.username, 'email': current_user.email})
 
 
 #FOR DEV ONLY - DELETE BEFORE PRODUCTION

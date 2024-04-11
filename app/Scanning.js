@@ -2,9 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Image, Text, Button, TouchableOpacity, StyleSheet } from 'react-native';
 import { Camera } from 'expo-camera';
 import IP from '../assets/assets.js';
+import { useNavigation } from '@react-navigation/native';
+
 
 const uploadFile = async (uri) => {
-  const url = 'http://' + IP + ':5001/upload'; // Replace with your server URL
+
+  const url = 'http://' + IP + ':5001/upload'; // Replace with your server UR
 
   // Get the file name and type from the URI
   let uriParts = uri.split('.');
@@ -42,6 +45,7 @@ const uploadFile = async (uri) => {
 };
 
 const Scanning = () => {
+  const navigation = useNavigation();
   const [hasPermission, setHasPermission] = useState(null);
   const [type, setType] = useState(Camera.Constants.Type.back);
   const [photoUri, setPhotoUri] = useState(null); // State to store the captured photo URI
@@ -72,7 +76,7 @@ const Scanning = () => {
   const usePhoto = () => {
     console.log('Photo selected:', photoUri);
     uploadFile(photoUri);
-    // Here you can handle the photo URI (e.g., upload it or pass it to another component)
+    navigation.navigate('Home');
   };
 
   // Render camera UI or a message if there's no access to the camera

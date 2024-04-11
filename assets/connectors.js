@@ -37,3 +37,24 @@ const uploadFile = async (uri) => {
       console.error(error);
     }
   };
+
+  const getUser = async () => {
+    const url = 'http://' + IP + ':5001/user';
+  
+    // Options for the fetch request
+    let options = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+  
+    // Make the request
+    try {
+      let response = await fetch(url, options);
+      let responseJson = await response.json();
+      return responseJson;
+    } catch (error) {
+      console.error(error);
+    }
+  }

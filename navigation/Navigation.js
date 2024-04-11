@@ -6,10 +6,41 @@ import Files from '../app/Files';
 import Scanning from '../app/Scanning';
 import SignUp from '../app/SignUp'; // Import the SignUp component
 import { TouchableOpacity, Text } from 'react-native';
+import { useEffect, useState } from 'react';
+import IP from '../assets/assets.js';
+
 
 const Stack = createStackNavigator();
 
+
+
 const Navigation = () => {
+
+  const url = 'http://' + IP + ':5001/user';
+
+
+  const handleSignoutPress = async () => {
+    try {
+      const response = await fetch('http://' + IP + ':5001/signout', {
+      method: 'get',
+    })
+
+      console.log('Response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Response data:', data);
+      } else {
+        // Handle error response from server
+        console.error('Error Signing Out');
+      }
+    } catch (error) {
+      // Handle network error
+      console.error('Network error:', error);
+    }
+    
+  };
+
   return (
     <Stack.Navigator>
       <Stack.Screen 
@@ -24,8 +55,9 @@ const Navigation = () => {
         headerRight: () => (
           <TouchableOpacity
             style={{ marginRight: 10 }}
-              onPress={() => navigation.navigate('Index')} // Replace with signout functionality
-          >
+            onPress={
+              () => { handleSignoutPress(); navigation.navigate("Index"); }
+             }          >
             <Text>Sign Out</Text>
           </TouchableOpacity>
         ),
