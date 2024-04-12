@@ -16,7 +16,7 @@ import config
 #import keras
 #from keras.models import load_model
 #import cv2
-#import pytesseract
+import pytesseract
 from model import run_ocr
 
 app = Flask(__name__)
@@ -96,8 +96,8 @@ def upload_file():
     </form>
     """
 
-#remove GET access before production
-@app.route('/delete/<filename>', methods=['GET','DELETE'])
+
+@app.route('/delete/<filename>', methods=['DELETE'])
 def delete_file(filename):
     # Delete the file from the uploads folder
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -338,7 +338,8 @@ def translate_post():
 
     # Run OCR on the image
     try:
-        text = run_ocr(image_path)
+        text = pytesseract.image_to_string(image_path)  #run_ocr(image_path)
+        print(text)
     except Exception as e:
         os.system('rm -rf predict_detect/predict*')
         os.system('rm -rf ocr_job')

@@ -141,6 +141,7 @@ const Files = () => {
   };
 
   const deleteImage = () => {
+    filename = images[selectedImageIndex].split('/').pop();
     Alert.alert(
       'Delete Image',
       'Are you sure you want to delete this image?',
@@ -152,16 +153,33 @@ const Files = () => {
         {
           text: 'Delete',
           onPress: () => {
-            const newImages = [...images];
-            newImages.splice(selectedImageIndex, 1); // Use index to delete
-            setImages(newImages);
-            setModalVisible(false); // Close modal after delete
+            console.log(filename);
+            fetch(`http://${IP}:5001/delete/${filename}`, {
+              method: 'DELETE'
+            })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('Failed to delete image');
+              }
+              return response.json();
+            })
+            .then(data => {
+              console.log(data.message); // Log success message
+              const newImages = images.filter(url => url !== `http://${IP}:5001/uploads/${filename}`);
+              setImages(newImages);
+              setModalVisible(false); // Close modal after delete
+            })
+            .catch(error => {
+              console.error('Error deleting image:', error);
+              // Handle error gracefully, e.g., show error message to user
+            });
           },
           style: 'destructive'
         }
       ]
     );
   };
+  
 
 
 //not working yet
