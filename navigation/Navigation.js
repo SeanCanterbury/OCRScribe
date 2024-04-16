@@ -52,17 +52,23 @@ const Navigation = () => {
         name="Home"
         component={Home}
         options={({ navigation }) => ({
-        title: 'Home',
-        headerRight: () => (
-          <TouchableOpacity
-            style={{ marginRight: 10 }}
-            onPress={
-              () => { handleSignoutPress(); navigation.navigate("Index"); }
-             }          >
-            <Text>Sign Out</Text>
-          </TouchableOpacity>
-        ),
-      })}
+          title: 'Home',
+          headerLeft: null, // Hide the back button
+          headerRight: () => (
+            <TouchableOpacity
+              style={{
+                marginRight: 10,
+                paddingVertical: 5,
+                paddingHorizontal: 10,
+                backgroundColor: 'red',
+                borderRadius: 5,
+              }}
+              onPress={() => { handleSignoutPress(); navigation.navigate("Index"); }}
+            >
+              <Text style={{ color: 'white' }}>Sign Out</Text>
+            </TouchableOpacity>
+          ),
+        })}
     />
       <Stack.Screen 
         name="Files" 

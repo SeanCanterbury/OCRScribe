@@ -34,10 +34,9 @@ const Home = () => {
       </View>
       {/* Bottom navigation bar */}
       <View style={styles.bottomNav}>
-        <Text style={styles.navText}>Â© OCRScribe 2024</Text>
+        <Text style={styles.navText}>© OCRScribe 2024</Text>
         <View style={styles.navButtons}>
           <Button title="Help" onPress={() => {}} />
-          <Button title="Settings" onPress={() => {}} />
         </View>
       </View> 
     </View>
