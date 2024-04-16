@@ -39,6 +39,10 @@ const Index = () => {
     navigation.navigate('SignUp');
   };
 
+  const handleSkipPress = () => {
+    navigation.navigate('Home');
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>OCRScribe</Text>
@@ -63,6 +67,9 @@ const Index = () => {
       </TouchableOpacity>
       <TouchableOpacity style={styles.signUpButton} onPress={handleSignUpPress}>
         <Text style={styles.buttonText}>Sign Up</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.signUpButton} onPress={handleSkipPress}>
+        <Text style={styles.buttonText}>Skip</Text>
       </TouchableOpacity>
     </View>
   );

@@ -17,7 +17,7 @@ import config
 #from keras.models import load_model
 #import cv2
 import pytesseract
-from model import run_ocr
+#from model import run_ocr
 
 app = Flask(__name__)
 
@@ -122,8 +122,34 @@ def delete_file(filename):
 
 #user endpoints
 
-#get for testing purposes only
-@app.route('/signup', methods=['POST', 'GET'])
+@app.route('/change_password', methods=['POST'])
+def change_password():
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'User not authenticated'}), 401
+    data = request.get_json()
+    newPassword = data.get("newPassword")
+    if current_user.password ==newPassword:
+        return jsonify({'error': 'New password must be different from the old password'}), 400
+    else:
+      current_user.password = newPassword
+      db.session.commit()
+      return jsonify({'message': 'Password changed successfully'}), 200
+    
+@app.route('/change_email', methods=['POST'])
+def change_email():
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'User not authenticated'}), 401
+    data = request.get_json()
+    newEmail = data.get("email")
+    if current_user.email ==newEmail:
+        return jsonify({'error': 'New Email must be different from the old Email'}), 400
+    else:
+      current_user.email = newEmail
+      db.session.commit()
+      return jsonify({'message': 'Email changed successfully'}), 200
+
+
+@app.route('/signup', methods=['POST'])
 def signup():
     if request.method == "POST":
         data = request.get_json()
@@ -135,34 +161,6 @@ def signup():
         db.session.commit()
         login_user(user)
         return jsonify({'message': 'User created successfully'}), 201
-    return """
-    <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sign Up</title>
-    <style>
-      h1 {
-        color: green;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Create an account</h1>
-    <form action="#" method="post">
-      <label for="username">Username:</label>
-      <input type="text" name="username" />
-      <label for="password">Password:</label>
-      <input type="password" name="password" />
-      <label for="email">Email:</label>
-      <input type="email" name="email" />
-      <button type="submit">Submit</button>
-    </form>
-  </body>
-</html>
-    """
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -322,6 +320,7 @@ def translate_post():
     data = request.get_json()
     filename = data.get('filename')
     print(data)
+    print('filename' + filename)
     if not filename:
         return jsonify({'error': 'No filename provided'}), 400
 
@@ -345,11 +344,12 @@ def translate_post():
         os.system('rm -rf ocr_job')
         return jsonify({'error': f"Error running OCR: {str(e)}"}), 500
 
+    newfilename = filename.replace(".", "_")
     # May change to new folder for output
     translations_folder = os.path.join(os.path.dirname(app.config['UPLOAD_FOLDER']), 'translations')
     if not os.path.exists(translations_folder):
         os.makedirs(translations_folder)
-    output_file_path = os.path.join(translations_folder, os.path.splitext(filename)[0] + ".txt")
+    output_file_path = os.path.join(translations_folder, newfilename + ".txt")
     with open(output_file_path, 'w') as file:
         file.write(text)
         upload.text_extracted = output_file_path
@@ -358,6 +358,21 @@ def translate_post():
 
     # Return the text as a JSON response
     return jsonify({'text': text})
+
+@app.route('/translations/<filename>', methods=['GET'])
+def translation_file(filename):
+    print(filename)
+    file_path = os.path.join(app.config['TRANSLATIONS_FOLDER'], filename)
+
+    if not os.path.exists(file_path):
+      return jsonify({'error': f"Translation file not found at try scanning your image"}), 404
+    with open(file_path, 'r') as file:
+      translation = file.read()
+      print(translation)
+    
+    return jsonify({'translation': translation})
+
+    
 
 if __name__ == '__main__':
     app.run(debug=True, ssl_context='adhoc')

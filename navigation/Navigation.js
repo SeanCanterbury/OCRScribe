@@ -5,6 +5,7 @@ import Home from '../app/Home';
 import Files from '../app/Files';
 import Scanning from '../app/Scanning';
 import SignUp from '../app/SignUp'; // Import the SignUp component
+import ProfileSettings from '../app/ProfileSettings'; // Import the ProfileSettings component
 import { TouchableOpacity, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import IP from '../assets/assets.js';
@@ -75,6 +76,11 @@ const Navigation = () => {
         name="SignUp" // Add a screen for SignUp
         component={SignUp}
         options={{ title: 'Sign Up' }} />
+      <Stack.Screen 
+        name="ProfileSettings" 
+        component={ProfileSettings} 
+        options={{ title: 'Profile Settings' }} />
+
     </Stack.Navigator>
   );
 };

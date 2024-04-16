@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, Alert, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, Alert, Modal, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import IP from '../assets/assets.js'
@@ -43,45 +43,29 @@ const uploadFile = async (uri) => {
   }
 };
 
+const fetchImages = async (setImages) => {
+  try {
+    const response = await fetch('http://' + IP + ':5001/files');
+    const data = await response.json();
+    // Map the file names to URLs
+    const imageUrls = data.files.map(filename => 'http://' + IP + ':5001/uploads/' + filename);
+    setImages(imageUrls);
+    console.log("Images: ", imageUrls);
+  } catch (error) {
+    console.error('Error fetching files:', error);
+  }
+};
 
 const Files = () => {
   const navigation = useNavigation();
   const [images, setImages] = useState([]);
+  const [translation, setTranslation] = useState('');
+  const [translations, setTranslations] = useState([]);
 
-  //preloads images const with the existing files in the server.
+
   useEffect(() => {
-    console.log('http://' + IP + ':5001/files')
-    fetch('http://' + IP + ':5001/files')
-      .then(response => response.json())
-      .then(data => {
-        // Map the file names to URLs
-        const imageUrls = data.files.map(filename => 'http://' + IP + ':5001/uploads/' + filename);
-        setImages(imageUrls);
-        console.log("Images: ", imageUrls)
-      })
-      .catch(error => {
-        console.log(error);
-        console.error('Error fetching files:', error);
-      });
+    fetchImages(setImages);
   }, []);
-  
-  /*
-  const getHello = async () => {
-    try {  
-      const response = await fetch('http://' + IP + ':5001/helloworld');
-      console.log("Getting hello2");
-      const json = await response.json();
-      console.log(json.message);
-      
-    } catch (error) {
-      console.error(error);
-    } 
-  };
-  
-  useEffect(() => {
-    getHello();
-  }, []);
-  */
 
   const translateImage = async (filename) => {
     const url = 'http://' + IP + ':5001/translate'; // Replace with your server URL
@@ -105,6 +89,39 @@ const Files = () => {
     }
   };
 
+  const getTranslation = async () => {
+    
+    filename = images[selectedImageIndex].split('/').pop();
+    console.log("filename111: " + filename);
+    filename = filename.replace('.', '_'); // Corrected line
+    filename = filename + '.txt';
+        console.log("filename: " + filename);
+
+
+    const url = 'http://' + IP + ':5001/translations/' + filename;
+
+    let options = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+
+    try {
+      let response = await fetch(url, options);
+      let responseJson = await response.json();
+      console.log("responseJson: '" + responseJson.translation + "'");
+      if (responseJson.translation === '') {
+        setTranslation("no text found");
+      } else {
+        setTranslation(responseJson.translation);
+      }
+      return responseJson.translation;
+    }
+    catch (error) {
+      console.error(error);
+    }
+  }
 
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(null); // Updated to use index
@@ -138,6 +155,7 @@ const Files = () => {
     } catch (error) {
       console.error('Error picking image:', error);
     }
+    fetchImages(setImages);
   };
 
   const deleteImage = () => {
@@ -153,7 +171,7 @@ const Files = () => {
         {
           text: 'Delete',
           onPress: () => {
-            console.log(filename);
+            console.log(filename);``
             fetch(`http://${IP}:5001/delete/${filename}`, {
               method: 'DELETE'
             })
@@ -178,6 +196,7 @@ const Files = () => {
         }
       ]
     );
+    fetchImages(setImages);
   };
   
 
@@ -222,9 +241,17 @@ const scanImage = async() => {
           <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeModalButton}>
             <Text style={styles.buttonText}>Close</Text>
           </TouchableOpacity>
+          <Text> </Text>
           {selectedImageIndex !== null && (
             <Image source={{ uri: images[selectedImageIndex] }} style={styles.modalImage} />
           )}
+            <View style={styles.textBox} onload={getTranslation()}>
+              <ScrollView contentContainerStyle={styles.scrollView}>
+                <Text selectable={true} style={styles.translatedText}>
+                {translation}
+                </Text>
+              </ScrollView>
+            </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={deleteImage}>
               <Text style={styles.buttonText}>Delete</Text>
@@ -297,6 +324,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   buttonContainer: {
+    paddingTop: 20,
     flexDirection: 'row',
   },
   button: {
@@ -308,6 +336,40 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: 'red',
+  },
+  scrollView: {
+    paddingHorizontal: 20,
+  },
+  textContainer: {
+    alignItems: 'center',
+    paddingBottom: 25,
+    paddingHorizontal: 20,
+  },
+  textBox: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    minWidth: 0.9 * Dimensions.get('window').width,
+    maxHeight: 0.25 * Dimensions.get('window').height,
+    maxWidth: 0.9 * Dimensions.get('window').width,
+    flexGrow: 1,
+  },
+  closeModalButton: {
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: 'red',
+  },
+  translatedText: {
+    fontSize: 20,
+    textAlign: 'center',
   },
 });
 
