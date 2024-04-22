@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, StatusBar, Div } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, StatusBar, KeyboardAvoidingView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IP from '../assets/assets.js';
 
@@ -44,7 +44,7 @@ const Index = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <Text style={styles.header}>OCRScribe</Text>
       <Text style={styles.subHeader}>Scan handwritten documents into machine-readable text</Text>
       <StatusBar style="auto" />
@@ -71,7 +71,7 @@ const Index = () => {
       <TouchableOpacity style={styles.signUpButton} onPress={handleSkipPress}>
         <Text style={styles.buttonText}>Skip</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

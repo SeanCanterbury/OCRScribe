@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView } from 'react-native';
 import IP from '../assets/assets.js';
 
 const ProfileSettings = ({ navigation }) => {
@@ -91,7 +91,7 @@ const ProfileSettings = ({ navigation }) => {
 
   return (
     
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <Text style={styles.welcomeText} onload={getUser()}>Welcome { userName }, update your credentials here!</Text>
       <TextInput
         style={styles.input}
@@ -127,7 +127,7 @@ const ProfileSettings = ({ navigation }) => {
       <TouchableOpacity style={styles.button} onPress={changeEmail}>
         <Text style={styles.buttonText}>Update Email</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -150,7 +150,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#007bff',
     padding: 10,
     borderRadius: 5,
-    marginTop: 20
   },
   buttonText: {
     color: '#fff',

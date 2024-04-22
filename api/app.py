@@ -107,7 +107,8 @@ def delete_file(filename):
         return jsonify({'error': f"File not found at {file_path}"}), 404
     
     # Delete the corresponding translation file from the translations folder
-    translation_file_path = os.path.join(app.config['TRANSLATIONS_FOLDER'], os.path.splitext(filename)[0] + ".txt")
+    translation_filename = filename.replace(".", "_") + ".txt"
+    translation_file_path = os.path.join(app.config['TRANSLATIONS_FOLDER'], translation_filename)
     if os.path.exists(translation_file_path):
         os.remove(translation_file_path)
     

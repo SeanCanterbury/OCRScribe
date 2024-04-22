@@ -90,12 +90,14 @@ const Files = () => {
   };
 
   const getTranslation = async () => {
-    
     filename = images[selectedImageIndex].split('/').pop();
-    console.log("filename111: " + filename);
+    temp = filename;
+    //console.log("filename111: " + filename);
     filename = filename.replace('.', '_'); // Corrected line
     filename = filename + '.txt';
         console.log("filename: " + filename);
+        
+      
 
 
     const url = 'http://' + IP + ':5001/translations/' + filename;
@@ -149,17 +151,21 @@ const Files = () => {
         //setImages(prevImages => [...prevImages, result.assets[0].uri]);
         console.log(result.assets[0].uri);
         uploadFile(result.assets[0].uri);
+        setImages(prevImages => [...prevImages, result.assets[0].uri]);
       } else {
         console.log('Image selection canceled or URI is undefined.');
       }
     } catch (error) {
       console.error('Error picking image:', error);
     }
-    fetchImages(setImages);
+    //fetchImages(setImages);
   };
 
   const deleteImage = () => {
-    filename = images[selectedImageIndex].split('/').pop();
+    console.log("Hello world");
+    console.log("sttored value: " + images[selectedImageIndex].split('/').pop());
+    imgfilename = images[selectedImageIndex].split('/').pop();
+    console.log("filename: " + imgfilename);
     Alert.alert(
       'Delete Image',
       'Are you sure you want to delete this image?',
@@ -171,8 +177,8 @@ const Files = () => {
         {
           text: 'Delete',
           onPress: () => {
-            console.log(filename);``
-            fetch(`http://${IP}:5001/delete/${filename}`, {
+            () => setModalVisible(false);
+            fetch(`http://${IP}:5001/delete/${imgfilename}`, {
               method: 'DELETE'
             })
             .then(response => {
@@ -183,7 +189,7 @@ const Files = () => {
             })
             .then(data => {
               console.log(data.message); // Log success message
-              const newImages = images.filter(url => url !== `http://${IP}:5001/uploads/${filename}`);
+              const newImages = images.filter(url => url !== `http://${IP}:5001/uploads/${imgfilename}`);
               setImages(newImages);
               setModalVisible(false); // Close modal after delete
             })
@@ -217,6 +223,7 @@ const scanImage = async() => {
 
   console.log(response.text);
   setModalVisible(false);
+  navigation.navigate("Files");
 };
 
   return (

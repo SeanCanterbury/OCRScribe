@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, StatusBar, KeyboardAvoidingView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IP from '../assets/assets.js';
 
@@ -41,7 +41,7 @@ const SignUp = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <Text style={styles.header}>Sign Up</Text>
       <TextInput style={styles.input} 
       onChangeText={setUsername}
@@ -62,7 +62,7 @@ const SignUp = () => {
             <TouchableOpacity style={styles.signUpButton} onPress={handleSignUpPress}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
