@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, Alert, Modal, ScrollView } from 'react-native';
+import { Share, View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimensions, Alert, Modal, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import IP from '../assets/assets.js'
@@ -60,7 +60,7 @@ const Files = () => {
   const navigation = useNavigation();
   const [images, setImages] = useState([]);
   const [translation, setTranslation] = useState('');
-  const [translations, setTranslations] = useState([]);
+  //const [translations, setTranslations] = useState([]);
 
 
   useEffect(() => {
@@ -90,15 +90,15 @@ const Files = () => {
   };
 
   const getTranslation = async () => {
-    filename = images[selectedImageIndex].split('/').pop();
-    temp = filename;
-    //console.log("filename111: " + filename);
-    filename = filename.replace('.', '_'); // Corrected line
-    filename = filename + '.txt';
+    try{
+      if(selectedImageIndex != null) {
+        filename = images[selectedImageIndex].split('/').pop();
+        temp = filename;
+        //console.log("filename111: " + filename);
+        filename = filename.replace('.', '_'); // Corrected line
+        filename = filename + '.txt';
         console.log("filename: " + filename);
-        
       
-
 
     const url = 'http://' + IP + ':5001/translations/' + filename;
 
@@ -123,6 +123,10 @@ const Files = () => {
     catch (error) {
       console.error(error);
     }
+  }
+  } catch (error) {
+    console.error(error);
+  }
   }
 
 
@@ -205,7 +209,27 @@ const Files = () => {
     fetchImages(setImages);
   };
   
-
+  const shareImage = async () => {
+    console.log("Imageurl: " + images[selectedImageIndex]);
+    
+      try{
+        const result = await Share.share({
+          message: images[selectedImageIndex],
+        });
+        if (result.action === Share.sharedAction) {
+          if (result.activityType) {
+            // shared with activity type of result.activityType
+          } else {
+            // shared
+          }
+        } else if (result.action === Share.dismissedAction) {
+          // dismissed
+        }
+      } catch (error) {
+        console.error("error sharing image: ", error);
+      }
+    
+  }
 
 //not working yet
 const scanImage = async() => {
@@ -265,6 +289,9 @@ const scanImage = async() => {
             </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={scanImage}>
               <Text style={styles.buttonText}>Scan</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={shareImage}>
+              <Text style={styles.buttonText}>Share</Text>
             </TouchableOpacity>
           </View>
         </View>

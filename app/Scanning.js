@@ -95,8 +95,8 @@ const Scanning = () => {
       {photoUri ? (
         <View style={styles.previewContainer}>
           <Image source={{ uri: photoUri }} style={styles.preview} />
-          <Button title="Retake" onPress={retakePicture} />
-          <Button title="Use Photo" onPress={usePhoto} />
+          <Button title="Retake" onPress={retakePicture} style={styles.button}/>
+          <Button title="Use Photo" onPress={usePhoto} style={styles.button}/>
         </View>
       ) : (
         <Camera style={styles.camera} type={type} ref={cameraRef}>
@@ -147,7 +147,6 @@ const styles = StyleSheet.create({
   },
   flipText: {
     color: '#000000',
-    bold: true,
     fontSize: 18,
   },
   captureButton: {
@@ -165,6 +164,14 @@ const styles = StyleSheet.create({
     height: 85,
     borderRadius: 100,
     backgroundColor: 'black',
+  },
+  button: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    marginRight: 20,
+    marginTop: 20,
   },
 });
 
