@@ -3,19 +3,14 @@ import { Share, View, Text, TouchableOpacity, FlatList, Image, StyleSheet, Dimen
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import IP from '../assets/assets.js'
-//import uploadFile from '../assets/connectors.js';
 
+//FINAL
 const uploadFile = async (uri) => {
-  const url = 'http://' + IP + ':5001/upload'; // Replace with your server URL
-
-  // Get the file name and type from the URI
+  const url = 'http://' + IP + ':5001/upload'; 
   let uriParts = uri.split('.');
   let fileType = uriParts[uriParts.length - 1];
-
-  // Create a new form data
   let formData = new FormData();
 
-  // Append the file to form data
   let file = {
     uri,
     name: `photo.${fileType}`,
@@ -23,8 +18,6 @@ const uploadFile = async (uri) => {
   };
 
   formData.append('file', file);
-
-  // Options for the fetch request
   let options = {
     method: 'POST',
     body: formData,
@@ -33,7 +26,6 @@ const uploadFile = async (uri) => {
     },
   };
 
-  // Make the request
   try {
     let response = await fetch(url, options);
     let responseJson = await response.json();
@@ -43,14 +35,15 @@ const uploadFile = async (uri) => {
   }
 };
 
+//FINAL
 const fetchImages = async (setImages) => {
   try {
     const response = await fetch('http://' + IP + ':5001/files');
     const data = await response.json();
-    // Map the file names to URLs
+
     const imageUrls = data.files.map(filename => 'http://' + IP + ':5001/uploads/' + filename);
     setImages(imageUrls);
-    console.log("Images: ", imageUrls);
+    //console.log("Images: ", imageUrls);
   } catch (error) {
     console.error('Error fetching files:', error);
   }
@@ -60,17 +53,15 @@ const Files = () => {
   const navigation = useNavigation();
   const [images, setImages] = useState([]);
   const [translation, setTranslation] = useState('');
-  //const [translations, setTranslations] = useState([]);
-
 
   useEffect(() => {
     fetchImages(setImages);
   }, []);
 
+  //FINAL
   const translateImage = async (filename) => {
-    const url = 'http://' + IP + ':5001/translate'; // Replace with your server URL
-    console.log("name: " + filename)
-    // Options for the fetch request
+    const url = 'http://' + IP + ':5001/translate';
+    //console.log("name: " + filename)
     let options = {
       method: 'POST',
       body: JSON.stringify({ filename }),
@@ -79,7 +70,6 @@ const Files = () => {
       },
     };
   
-    // Make the request
     try {
       let response = await fetch(url, options);
       let responseJson = await response.json();
@@ -89,53 +79,51 @@ const Files = () => {
     }
   };
 
+
+  //FINAL
   const getTranslation = async () => {
     try{
       if(selectedImageIndex != null) {
         filename = images[selectedImageIndex].split('/').pop();
-        temp = filename;
-        //console.log("filename111: " + filename);
         filename = filename.replace('.', '_'); // Corrected line
         filename = filename + '.txt';
         console.log("filename: " + filename);
-      
+        
+        const url = 'http://' + IP + ':5001/translations/' + filename;
 
-    const url = 'http://' + IP + ':5001/translations/' + filename;
+        let options = {
+          method: 'GET',
+          headers: {
+           'Content-Type': 'application/json',
+          },
+        };
 
-    let options = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    };
-
-    try {
-      let response = await fetch(url, options);
-      let responseJson = await response.json();
-      console.log("responseJson: '" + responseJson.translation + "'");
-      if (responseJson.translation === '') {
-        setTranslation("no text found");
-      } else {
-        setTranslation(responseJson.translation);
+        try {
+          let response = await fetch(url, options);
+          let responseJson = await response.json();
+          console.log("responseJson: '" + responseJson.translation + "'");
+          if (responseJson.translation === '') {
+            setTranslation("no text found");
+          } else {
+            setTranslation(responseJson.translation);
+          }
+          return responseJson.translation;
+        }
+        catch (error) {
+          console.error(error);
+        }
       }
-      return responseJson.translation;
-    }
-    catch (error) {
-      console.error(error);
-    }
-  }
-  } catch (error) {
+    } catch (error) {
     console.error(error);
-  }
+    }
   }
 
-
-  const [selectedImageIndex, setSelectedImageIndex] = useState(null); // Updated to use index
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync(); // Fixed method name
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         alert('Sorry, we need camera roll permissions to make this work!');
       }
@@ -150,9 +138,7 @@ const Files = () => {
         aspect: [4, 3],
         quality: 1,
       });
-      console.log("testing");
       if (!result.cancelled && result.assets.length > 0 && result.assets[0].uri) {
-        //setImages(prevImages => [...prevImages, result.assets[0].uri]);
         console.log(result.assets[0].uri);
         uploadFile(result.assets[0].uri);
         setImages(prevImages => [...prevImages, result.assets[0].uri]);
@@ -162,7 +148,6 @@ const Files = () => {
     } catch (error) {
       console.error('Error picking image:', error);
     }
-    //fetchImages(setImages);
   };
 
   const deleteImage = () => {
@@ -192,14 +177,13 @@ const Files = () => {
               return response.json();
             })
             .then(data => {
-              console.log(data.message); // Log success message
+              console.log(data.message);
               const newImages = images.filter(url => url !== `http://${IP}:5001/uploads/${imgfilename}`);
               setImages(newImages);
-              setModalVisible(false); // Close modal after delete
+              setModalVisible(false);
             })
             .catch(error => {
               console.error('Error deleting image:', error);
-              // Handle error gracefully, e.g., show error message to user
             });
           },
           style: 'destructive'
@@ -216,32 +200,20 @@ const Files = () => {
         const result = await Share.share({
           message: images[selectedImageIndex],
         });
-        if (result.action === Share.sharedAction) {
-          if (result.activityType) {
-            // shared with activity type of result.activityType
-          } else {
-            // shared
-          }
-        } else if (result.action === Share.dismissedAction) {
-          // dismissed
-        }
       } catch (error) {
         console.error("error sharing image: ", error);
       }
     
   }
 
-//not working yet
+  //FINAL
 const scanImage = async() => {
-  console.log(`Scanning image at index ${selectedImageIndex}`);
+  //console.log(`Scanning image at index ${selectedImageIndex}`);
   const selectedImageUrl = images[selectedImageIndex];
-  console.log(selectedImageUrl);
-
-  // Extract the filename from the URL
+  //console.log(selectedImageUrl);
   const url = new URL(selectedImageUrl);
   const selectedImageFilename = url.pathname.split('/').pop();
-
-  console.log(selectedImageFilename);
+  //console.log(selectedImageFilename);
 
   const response = await translateImage(selectedImageFilename);
 
@@ -299,10 +271,6 @@ const scanImage = async() => {
     </View>
   );
 };
-
-// Add your existing styles
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
