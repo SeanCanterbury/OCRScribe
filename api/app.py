@@ -9,13 +9,14 @@ from flask_migrate import Migrate
 from utils import auth_required, allowed_file
 from flask_login import LoginManager, login_user, current_user, logout_user
 import config
+from spellchecker import SpellChecker
 
 #OCR stuff
-#import pandas as pd
-#import tensorflow as tf
-#import keras
-#from keras.models import load_model
-#import cv2
+import pandas as pd
+import tensorflow as tf
+import keras
+from keras.models import load_model
+import cv2
 import pytesseract
 #from model import run_ocr
 
@@ -37,6 +38,8 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def loader_user(user_id):
     return User.query.get(user_id)
+
+model = load_model('hand_machine_written.h5')
 
     
 #testing database connection by creating a new upload entry and pushing it to db
@@ -289,31 +292,6 @@ def get_files():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-#testing only
-@app.route('/translate', methods=['GET'])
-def translate():
-    # prompt user to select file to translate from upload folder
-    files = os.listdir(app.config['UPLOAD_FOLDER'])
-    if not files:
-        return jsonify({'error': 'No files available in the uploads folder'}), 400
-
-    #Render an HTML form for file selection
-    html = """
-    <!doctype html>
-    <title>Select File</title>
-    <h1>Select File</h1>
-    <form method="POST" action="/translate">
-      <select name="file">
-    """
-    for file in files:
-        html += f'<option value="{file}">{file}</option>'
-    html += """
-      </select>
-      <input type="submit" value="Translate">
-    </form>
-    """
-    return html
-
 
 @app.route('/translate', methods=['POST'])
 def translate_post():
@@ -338,8 +316,25 @@ def translate_post():
 
     # Run OCR on the image
     try:
-        text = pytesseract.image_to_string(image_path)  #run_ocr(image_path)
+        #for bypassing model -- text = pytesseract.image_to_string(image_path)  
+        #New model text = run_ocr(image_path)
+        img = cv2.imread(image_path)
+        if img is None:
+            return jsonify({'error': 'Image not found'}), 404
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        text = pytesseract.image_to_string(gray)
         print(text)
+
+        spell = SpellChecker()
+        words = text.split()
+        corrected_text = []
+        for word in words:
+            corrected_word = spell.correction(word)
+            corrected_text.append(corrected_word)
+
+        text = " ".join(corrected_text)
+        print(text)
+
     except Exception as e:
         os.system('rm -rf predict_detect/predict*')
         os.system('rm -rf ocr_job')
